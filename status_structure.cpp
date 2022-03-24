@@ -7,12 +7,20 @@ public:
     Node *left;
     Node *right;
     int height;
-    Node()
+    Node(int a)
     {
+
         this->line = Line();
         this->height = 0;
         this->left = nullptr;
         this->right = nullptr;
+    }
+    Node()
+    {
+        this->line = Line();
+        this->height = 0;
+        *this->left = Node(0);
+        *this->right = Node(0);
     }
     Node(Line l)
     {
@@ -53,10 +61,12 @@ public:
         }
         else if (root.line.compare_lower_angle(point[0], point[1], l) > 0)
         {
+
             *root.left = this->insert(*root.left, point, l);
         }
         else
         {
+
             *root.right = this->insert(*root.right, point, l);
         }
 
@@ -138,20 +148,103 @@ public:
 
         return x;
     }
-    void deleteNode(Node node)
+
+    void inorder(Node root, vector<Node> &result)
     {
-        if (node.left != nullptr)
+        if (root.is_null())
         {
-            insert(*node.left);
+            return;
         }
-        if (node.right != nullptr)
+        else
         {
-            insert(*node.right);
+
+            this->inorder(*root.left, result);
+            result.push_back(root);
+            this->inorder(*root.right, result);
+        }
+    }
+
+    vector<Node> self_inorder()
+    {
+        vector<Node> result{};
+        this->inorder(this->root, result);
+        return result;
+    }
+
+    void delete_line(vector<double> point, Line l)
+    {
+        this->root = this->delete_node(this->root, point, l);
+    }
+    void delete_lines(vector<double> point, vector<Line> lines)
+    {
+        for (Line l : lines)
+        {
+            this->delete_line(point, l);
+        }
+    }
+    Node delete_node(Node root, vector<double> point, Line l)
+    {
+        if (root.is_null())
+        {
+            return root;
+        }
+        else if (root.line.compare_upper_angle(point[0], point[1], l) > 0)
+        {
+            *root.left = this->delete_node(*root.left, point, l);
+        }
+        else if (root.line.compare_upper_angle(point[0], point[1], l) < 0)
+        {
+            *root.right = this->delete_node(*root.right, point, l);
+        }
+        else
+        {
+            if ((*root.left).is_null())
+            {
+                Node temp = *root.right;
+                root = Node();
+                return temp;
+            }
+            else if ((*root.right).is_null())
+            {
+                Node temp = *root.left;
+                root = Node();
+                return temp;
+            }
+            Node temp = this->fetch_min_val_node(*root.right);
+            root.line = temp.line;
+            *root.right = this->delete_node(*root.right, point, temp.line);
+        }
+        if (root.is_null())
+            return root;
+
+        root.height = 1 + max(this->fetch_height(*root.left), this->fetch_height(*root.right));
+        int balance = this->fetch_balance(root);
+        if ((balance > 1) && (this->fetch_balance(*root.left) >= 0))
+            return this->rotateRight(root);
+        if ((balance < -1) && (this->fetch_balance(*root.right) <= 0))
+            return this->rotateLeft(root);
+        if ((balance > 1) && (this->fetch_balance(*root.left) < 0))
+        {
+            *root.left = this->rotateLeft(*root.left);
+            return this->rotateRight(root);
+        }
+        if ((balance < -1) && (this->fetch_balance(*root.right) > 0))
+        {
+            *root.right = this->rotateRight(*root.right);
+            return this->rotateLeft(root);
         }
 
-        // node = nullptr;
-        // fix by converting struct Node to a class
+        return root;
     }
+
+    Node fetch_min_val_node(Node root)
+    {
+        if (root.is_null() || (*root.left).is_null())
+            return root;
+
+        return this->fetch_min_val_node(*root.left);
+    }
+
     int fetch_height(Node root)
     {
         if (root.is_null())
@@ -161,7 +254,7 @@ public:
     }
     int fetch_balance(Node root)
     {
-        return root.left->height - root.right->height;
+        return (*root.left).height - (*root.right).height;
     }
 
     // implement right and left adjacent finders
