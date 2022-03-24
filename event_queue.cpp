@@ -8,6 +8,15 @@ public:
 	Node *right;
 	vector<Line> lines;
 
+	Node()
+	{
+		this->lines = {};
+		this->height = 0;
+		this->left = nullptr;
+		this->right = nullptr;
+		this->point = vector<double>{};
+	}
+
 	Node(vector<double> point, Line l)
 	{
 		this->point = point;
@@ -23,12 +32,11 @@ public:
 			this->lines = {l};
 		}
 	}
-};
-struct Event
-{
-	point p;
-	int segment;
-	int position;
+
+	bool is_null()
+	{
+		return ((this->lines == vector<Line>{}) && (this->height == 0));
+	}
 };
 
 int compare(vector<double> p1, vector<double> p2)
@@ -42,38 +50,9 @@ int compare(vector<double> p1, vector<double> p2)
 class EventQueue
 {
 public:
+	Node root;
 	EventQueue()
 	{
-		//		Node head=nullptr;
-	}
-	EventQueue(Event e)
-	{
-		Event m = e;
-		Node head;
-		head.left = nullptr;
-		head.right = nullptr;
-		head.height = 1;
-	}
-
-	Node insert(Node node, point p, Line line)
-	{
-		if (node.head != nullptr)
-			return node.head;
-
-		else if (compare(p, node.q) < 0)
-		{
-			node.left = insert(node.left, p, line);
-		}
-		else if (compare(p, node.q) > 0)
-
-		{
-			node.right = insert(node.right, p, line);
-		}
-
-		else if (l != nullptr)
-		{
-			node.line.lower_end = line.lower_end;
-			node.line.upper_end = line.upper_end;
-		}
+		Node root = Node();
 	}
 };
