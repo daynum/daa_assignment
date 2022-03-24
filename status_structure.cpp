@@ -257,8 +257,139 @@ public:
         return (*root.left).height - (*root.right).height;
     }
 
-    // implement right and left adjacent finders
-    // leftmost and rightmost finders
-    // simple inorder traversal function
-    // searching segments by points
+    vector<Line> get_segments_containing_point(vector<double> point)
+    {
+        vector<vector<Line>> result(3, vector<Line>{});
+        this->inner_get_segments(this->root, point, result);
+    }
+    void inner_get_segments(Node root, vector<double> point, vector<vector<Line>> &result)
+    {
+        if (root.is_null())
+        {
+            return;
+        }
+        else if (root.line.pointWRTLine(point[0], point[1]) > 0)
+        {
+            this->inner_get_segments(*root.right, point, result);
+        }
+        else if (root.line.pointWRTLine(point[0], point[1]) < 0)
+        {
+            this->inner_get_segments(*root.left, point, result);
+        }
+        else
+        {
+            if (!(*root.left).is_null())
+            {
+                this->inner_get_segments(*root.left, point, result);
+            }
+            if (root.line.lower_end == point)
+            {
+                result[0].push_back(root.line);
+            }
+            else
+            {
+                result[1].push_back(root.line);
+            }
+            result[2].push_back(root.line);
+
+            if (!(*root.right).is_null())
+            {
+                this->inner_get_segments(*root.right, point, result);
+            }
+        }
+    }
+    void inner_find_left(Node root, vector<double> point, Node left)
+    {
+        if (root.is_null())
+            return;
+        else if (root.line.pointWRTLine(point[0], point[1]) > 0)
+        {
+            left.copy(root);
+            this->inner_find_left(*root.right, point, left);
+        }
+        else if (root.line.pointWRTLine(point[0], point[1]) <= 0)
+        {
+            this->inner_find_left(*root.left, point, left);
+        }
+    }
+
+    Line get_adjacent_left_line(vector<double> point)
+    {
+        Node left = Node();
+        this->inner_find_left(this->root, point, left);
+        return left.line;
+    }
+
+    Line get_adjacent_right_line(vector<double> point)
+    {
+        Node right = Node();
+        this->inner_find_right(this->root, point, right);
+        return right.line;
+    }
+
+    void inner_find_right(Node root, vector<double> point, Node right)
+    {
+        if (root.is_null())
+            return;
+        else if (root.line.pointWRTLine(point[0], point[1]) >= 0)
+        {
+            this->inner_find_right(*root.right, point, right);
+        }
+        else if (root.line.pointWRTLine(point[0], point[1]) < 0)
+        {
+            right.copy(root);
+            this->inner_find_right(*root.left, point, right);
+        }
+    }
+    void inner_leftmost(Node root, vector<double> point, Node leftmost)
+    {
+        if (root.is_null())
+            return;
+        else if (root.line.pointWRTLine(point[0], point[1]) > 0)
+        {
+            this->inner_leftmost(*root.right, point, leftmost);
+        }
+        else if (root.line.pointWRTLine(point[0], point[1]) < 0)
+        {
+            this->inner_leftmost(*root.left, point, leftmost);
+        }
+        else
+        {
+            this->inner_leftmost(*root.right, point, leftmost);
+            leftmost.copy(root);
+            this->inner_leftmost(*root.left, point, leftmost);
+        }
+    }
+    void inner_rightmost(Node root, vector<double> point, Node rightmost)
+    {
+        if (root.is_null())
+            return;
+        else if (root.line.pointWRTLine(point[0], point[1]) > 0)
+        {
+            this->inner_rightmost(*root.right, point, rightmost);
+        }
+        else if (root.line.pointWRTLine(point[0], point[1]) < 0)
+        {
+            this->inner_rightmost(*root.left, point, rightmost);
+        }
+        else
+        {
+            this->inner_rightmost(*root.left, point, rightmost);
+            rightmost.copy(root);
+            this->inner_rightmost(*root.right, point, rightmost);
+        }
+    }
+    Line get_leftmost(vector<double> point)
+    {
+        Node leftmost = Node();
+        this->inner_leftmost(this->root, point, leftmost);
+        return leftmost.line;
+    }
+
+    Line get_rightmost(vector<double> point)
+    {
+        Node rightmost = Node();
+        this->inner_rightmost(this->root, point, rightmost);
+        return rightmost.line;
+    }
 };
