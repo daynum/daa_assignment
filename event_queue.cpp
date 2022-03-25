@@ -260,6 +260,22 @@ public:
 
 		return root;
 	}
+	Node fetch_max()
+	{
+		Node curr = this->root;
+		while (!(*curr.right).is_null())
+		{
+			curr = *curr.right;
+		}
+		return curr;
+	}
+
+	Node pop_next_event()
+	{
+		Node curr = this->fetch_max();
+		this->delete_point(curr.point);
+		return curr;
+	}
 
 	Node fetch_min_val_node(Node root)
 	{

@@ -257,10 +257,11 @@ public:
         return (*root.left).height - (*root.right).height;
     }
 
-    vector<Line> get_segments_containing_point(vector<double> point)
+    vector<vector<Line>> get_segments_containing_point(vector<double> point)
     {
         vector<vector<Line>> result(3, vector<Line>{});
         this->inner_get_segments(this->root, point, result);
+        return result;
     }
     void inner_get_segments(Node root, vector<double> point, vector<vector<Line>> &result)
     {
