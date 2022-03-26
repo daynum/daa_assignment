@@ -1,15 +1,18 @@
 #include <vector>
 #include <cmath>
+#include <iostream>
 using namespace std;
 class Line
 {
 public:
+    string name = "nullname";
     vector<double> upper_end{0, 0};
     vector<double> lower_end{0, 0};
     Line()
     {
-        this->upper_end[0] = this->upper_end[1] = 0;
-        this->lower_end[0] = this->lower_end[1] = 0;
+        name = "empty_null_line";
+        this->upper_end = vector<double>{};
+        this->lower_end = vector<double>{};
     }
     Line(double upper[2], double lower[2])
     {
@@ -44,8 +47,14 @@ public:
     }
     bool isNull()
     {
-        return (this->upper_end[0] == 0 && this->upper_end[1] == 0 && this->lower_end[0] == 0 && this->lower_end[1] == 0);
+        return (this->upper_end.empty() && this->lower_end.empty());
     }
+
+    bool is_equal(const Line &l2)
+    {
+        return (this->upper_end == l2.upper_end && this->lower_end == l2.lower_end);
+    }
+
     vector<double> intersection(Line l)
     {
         double x1 = this->upper_end[0];

@@ -1,199 +1,224 @@
-#include <line.cpp>
-class Node
+#include "status_structure.cpp"
+// #include "line.cpp"
+class Event_Node
 {
 public:
 	int height;
 	vector<double> point;
-	Node *left;
-	Node *right;
+	Event_Node *left;
+	Event_Node *right;
 	vector<Line> lines;
 
-	Node(int a)
+	Event_Node()
 	{
-		this->lines = {};
+		this->lines = vector<Line>{};
 		this->height = 0;
 		this->left = nullptr;
 		this->right = nullptr;
-		this->point = vector<double>{};
-	}
-	Node()
-	{
-		this->lines = {};
-		this->height = 0;
-		*this->left = Node(0);
-		*this->right = Node(0);
-		this->point = vector<double>{};
+		this->point = vector<double>(2);
+		cout << "dam";
 	}
 
-	Node(vector<double> point, Line l)
+	Event_Node(vector<double> point, Line l)
 	{
-		this->point = point;
+		if (point.empty())
+		{
+			this->point = vector<double>(2);
+		}
+		else
+		{
+			this->point = vector<double>{point[0], point[1]};
+		}
+
 		this->height = 1;
-		*this->left = Node();
-		*this->right = Node();
-		if (l.isNull() == true)
+
+		this->left = new Event_Node();
+		this->right = new Event_Node();
+
+		if (l.isNull())
 		{
 			this->lines = {};
 		}
 		else
 		{
-			this->lines = {l};
+			this->lines = vector<Line>{l};
 		}
 	}
 
 	bool is_null()
 	{
-		return ((this->lines == vector<Line>{}) && (this->height == 0));
+		return (this->height == 0);
 	}
 };
-
-int compare(vector<double> p1, vector<double> p2)
-{
-	if (p1[1] != p2[1])
-		return p1[1] - p2[1];
-
-	return p2[0] - p1[0];
-}
 
 class EventQueue
 {
 public:
-	Node root;
+	Event_Node *root = nullptr;
 	EventQueue()
 	{
-		Node root = Node();
+		this->root = new Event_Node();
 	}
 
-	Node inner_insert(Node root, vector<double> point, Line l = Line())
+	void insert_line(Line l)
 	{
-		if (root.is_null())
+		vector<double> upper = {l.upper_end[0], l.upper_end[1]};
+		vector<double> lower = {l.lower_end[0], l.lower_end[1]};
+		cout << "\ninserting at: " << upper[0] << " " << upper[1] << ", " << lower[0] << " " << lower[1] << "\n";
+		Event_Node *t1 = this->inner_insert(this->root, upper, l);
+		this->root = t1;
+		Event_Node *t2 = this->inner_insert(this->root, lower, Line());
+		this->root = t2;
+	}
+
+	Event_Node *inner_insert(Event_Node *root, vector<double> point, Line l)
+	{
+		cout << "\n2. inserting at: " << point[0] << " " << point[1] << "and root is " << (*root).is_null() << "\n";
+
+		if ((*root).is_null())
 		{
-			return Node(point, l);
+			Event_Node *x = new Event_Node(point, l);
+			cout << "inserted at null root\n";
+			return x;
 		}
-		else if (compare(point, root.point) < 0)
+		else if (compare_points(point, (*root).point) < 0)
 		{
 
-			*root.left = this->inner_insert(*root.left, point, l);
+			Event_Node *x = this->inner_insert((*root).left, point, l);
+			(*root).left = x;
 		}
-		else if (compare(point, root.point) > 0)
+		else if (compare_points(point, (*root).point) > 0)
 		{
-
-			*root.right = this->inner_insert(*root.right, point, l);
+			Event_Node *x = this->inner_insert((*root).right, point, l);
+			(*root).right = x;
 		}
 		else
 		{
 			if (!l.isNull())
 			{
-				root.lines.push_back(l);
+				(*root).lines.push_back(l);
 			}
 			return root;
 		}
+		(*root).height = 1 + max(this->fetch_height((*root).left), this->fetch_height((*root).right));
+		root = balance(point, root);
+		return root;
+	}
 
-		root.height = 1 + max(this->fetch_height(*root.left), this->fetch_height(*root.right));
-		int balance = fetch_balance(root);
+	Event_Node *balance(vector<double> point, Event_Node *root)
+	{
+		int bal = fetch_balance(root);
 
-		if ((balance > 1) && (compare(point, root.point) < 0))
+		if ((bal > 1) && (compare_points(point, (*root).point) < 0))
 			return this->rotateRight(root);
-		if ((balance < -1) && (compare(point, root.point) > 0))
+		if ((bal < -1) && (compare_points(point, (*root).point) > 0))
 			return this->rotateLeft(root);
-		if ((balance > 1) && (compare(point, root.point) > 0))
+		if ((bal > 1) && (compare_points(point, (*root).point) > 0))
 		{
-			*root.left = this->rotateLeft(*root.left);
+			(*root).left = this->rotateLeft((*root).left);
 			return this->rotateRight(root);
 		}
-		if ((balance < -1) && (compare(point, root.point) < 0))
+		if ((bal < -1) && (compare_points(point, (*root).point) < 0))
 		{
-			*root.right = this->rotateRight(*root.right);
+			(*root).right = this->rotateRight((*root).right);
 			return this->rotateLeft(root);
 		}
 		return root;
 	}
-	Node insert_line(Line l)
+	static int compare_points(vector<double> p1, vector<double> p2)
 	{
-		vector<double> upper = l.upper_end;
-		vector<double> lower = l.lower_end;
+		if (!(abs(p1[1] - p2[1]) < 1e-3))
+			return p1[1] - p2[1];
 
-		this->root = this->inner_insert(this->root, upper, l);
-		this->root = this->inner_insert(this->root, lower, Line());
+		return p2[0] - p1[0];
 	}
 
-	Node insert_point(vector<double> point)
+	void insert_point(vector<double> point)
 	{
 		this->root = this->inner_insert(this->root, point, Line());
 	}
 
-	Node rotateLeft(Node node)
+	Event_Node *rotateLeft(Event_Node *node)
 	{
-		Node x = *node.right;
-		Node temp = *x.left;
-		*x.left = node;
-		*node.right = temp;
-
-		if (this->fetch_height(*node.left) > this->fetch_height(*node.right))
+		Event_Node *x = (*node).right;
+		Event_Node *temp = (*x).left;
+		(*x).left = node;
+		(*node).right = temp;
+		if (this->fetch_height((*node).left) > this->fetch_height((*node).right))
 		{
-			node.height = this->fetch_height(*node.left) + 1;
+			(*node).height = this->fetch_height((*node).left) + 1;
 		}
 		else
 		{
-			node.height = this->fetch_height(*node.right) + 1;
+			(*node).height = this->fetch_height((*node).right) + 1;
 		}
 
-		if (this->fetch_height(*x.left) > this->fetch_height(*x.right))
+		if (this->fetch_height((*x).left) > this->fetch_height((*x).right))
 		{
-			x.height = this->fetch_height(*x.left) + 1;
+			(*x).height = this->fetch_height((*x).left) + 1;
 		}
 		else
 		{
-			x.height = this->fetch_height(*x.right) + 1;
+			(*x).height = this->fetch_height((*x).right) + 1;
 		}
 
 		return x;
 	}
-	Node rotateRight(Node node)
+	Event_Node *rotateRight(Event_Node *node)
 	{
-		Node x = *node.left;
-		Node temp = *x.right;
-		*x.right = node;
-		*node.left = temp;
-		if (this->fetch_height(*node.left) > this->fetch_height(*node.right))
+
+		Event_Node *x = (*node).left;
+		Event_Node *temp = (*x).right;
+		(*x).right = node;
+		(*node).left = temp;
+		if (this->fetch_height((*node).left) > this->fetch_height((*node).right))
 		{
-			node.height = this->fetch_height(*node.left) + 1;
+			(*node).height = this->fetch_height((*node).left) + 1;
 		}
 		else
 		{
-			node.height = this->fetch_height(*node.right) + 1;
+			(*node).height = this->fetch_height((*node).right) + 1;
 		}
 
-		if (this->fetch_height(*x.left) > this->fetch_height(*x.right))
+		if (this->fetch_height((*x).left) > this->fetch_height((*x).right))
 		{
-			x.height = this->fetch_height(*x.left) + 1;
+			(*x).height = this->fetch_height((*x).left) + 1;
 		}
 		else
 		{
-			x.height = this->fetch_height(*x.right) + 1;
+			(*x).height = this->fetch_height((*x).right) + 1;
 		}
 
 		return x;
 	}
 
-	void inorder(Node root, vector<Node> &result)
+	void inorder(Event_Node *root, vector<Event_Node> &result)
 	{
-		if (root.is_null())
+		if (!root || (*root).is_null())
 		{
 			return;
 		}
 		else
 		{
-			this->inorder(*root.left, result);
-			result.push_back(root);
-			this->inorder(*root.right, result);
+			this->inorder((*root).left, result);
+			result.push_back(*root);
+			cout << "\n[point: " << (*root).point[0] << " " << (*root).point[0] << "], \n";
+
+			for (Line l : (*root).lines)
+			{
+				cout << "[" << l.name << "], ";
+			}
+
+			this->inorder((*root).right, result);
 		}
 	}
 
-	vector<Node> self_inorder()
+	vector<Event_Node> self_inorder()
 	{
-		vector<Node> result{};
+		vector<Event_Node> result{};
+		cout << "Inorder Start:\n";
 		this->inorder(this->root, result);
+		cout << "\nInorder end:" << endl;
 		return result;
 	}
 
@@ -202,100 +227,146 @@ public:
 		this->root = this->delete_node(this->root, point);
 	}
 
-	Node delete_node(Node root, vector<double> point)
+	Event_Node *delete_node(Event_Node *root, vector<double> point)
 	{
-		if (root.is_null())
+		if (!root || (*root).is_null())
 		{
 			return root;
 		}
-		else if (compare(point, root.point) < 0)
+		else if (compare_points(point, (*root).point) < 0)
 		{
-			*root.left = this->delete_node(*root.left, point);
+			(*root).left = this->delete_node((*root).left, point);
 		}
-		else if (compare(point, root.point) > 0)
+		else if (compare_points(point, (*root).point) > 0)
 		{
-			*root.right = this->delete_node(*root.right, point);
+			(*root).right = this->delete_node((*root).right, point);
 		}
 		else
 		{
-			if ((*root.left).is_null())
+			if ((!(*root).left) || ((*root).left)->is_null())
 			{
-				Node temp = *root.right;
-				root = Node();
+				Event_Node *temp = new Event_Node();
+				temp = (*root).right;
+				*root = Event_Node();
 				return temp;
 			}
-			else if ((*root.right).is_null())
+			else if ((!(*root).right) || (*root).right->is_null())
 			{
-				Node temp = *root.left;
-				root = Node();
+				Event_Node *temp = new Event_Node();
+				temp = (*root).left;
+				*root = Event_Node();
 				return temp;
 			}
-
-			Node temp = this->fetch_min_val_node(*root.right);
-			root.point = temp.point;
-			root.lines = temp.lines;
-			*root.right = this->delete_node(*root.right, temp.point);
+			Event_Node *temp2 = new Event_Node();
+			temp2 = this->fetch_min_val_node((*root).right);
+			(*root).point = (*temp2).point;
+			(*root).lines = (*temp2).lines;
+			(*root).right = this->delete_node((*root).right, (*temp2).point);
 		}
 
-		if (root.is_null())
+		if (!root || (*root).is_null())
 			return root;
 
-		root.height = 1 + max(this->fetch_height(*root.left), this->fetch_height(*root.right));
-		int balance = this->fetch_balance(root);
-
-		if ((balance > 1) && (this->fetch_balance(*root.left) >= 0))
-			return this->rotateRight(root);
-		if ((balance < -1) && (this->fetch_balance(*root.right) <= 0))
-			return this->rotateLeft(root);
-		if ((balance > 1) && (this->fetch_balance(*root.left) < 0))
-		{
-			*root.left = this->rotateLeft(*root.left);
-			return this->rotateRight(root);
-		}
-		if ((balance < -1) && (this->fetch_balance(*root.right) > 0))
-		{
-			*root.right = this->rotateRight(*root.right);
-			return this->rotateLeft(root);
-		}
-
-		return root;
+		(*root).height = 1 + max(this->fetch_height((*root).left), this->fetch_height((*root).right));
+		root = balance(point, root);
 	}
-	Node fetch_max()
+
+	Event_Node *fetch_max()
 	{
-		Node curr = this->root;
-		while (!(*curr.right).is_null())
+		Event_Node *curr = this->root;
+		while ((!(*curr).right->is_null()))
 		{
-			curr = *curr.right;
+			curr = (*curr).right;
 		}
 		return curr;
 	}
 
-	Node pop_next_event()
+	Event_Node *pop_next_event()
 	{
-		Node curr = this->fetch_max();
-		this->delete_point(curr.point);
+		Event_Node *curr = this->fetch_max();
+		this->delete_point((*curr).point);
 		return curr;
 	}
 
-	Node fetch_min_val_node(Node root)
+	Event_Node *fetch_min_val_node(Event_Node *root)
 	{
-		if (root.is_null() || (*root.left).is_null())
+		if (!root || (*root).is_null())
 			return root;
 
-		return this->fetch_min_val_node(*root.left);
+		return this->fetch_min_val_node((*root).left);
 	}
 
-	int fetch_height(Node root)
+	int fetch_height(Event_Node *root)
 	{
-		return root.height;
+		if (!root || (*root).is_null())
+			return 0;
+		else
+			return (*root).height;
 	}
-	int fetch_balance(Node root)
+	int fetch_balance(Event_Node *root)
 	{
-		return (*root.left).height - (*root.right).height;
+		if ((!(*root).left) || (*root).left->is_null())
+		{
+			if ((!(*root).right) || (*root).right->is_null())
+			{
+				return 0;
+			}
+			else
+			{
+				return 0 - (*root).right->height;
+			}
+		}
+		else if ((!(*root).right) || (*root).right->is_null())
+		{
+			return (*root).left->height;
+		}
+		else
+		{
+			return (*root).left->height - (*root).right->height;
+		}
 	}
 
 	bool is_null()
 	{
-		return this->root.is_null();
+		return (this->root)->is_null();
 	}
 };
+
+// int main()
+// {
+// 	vector<Line> lines = {};
+// 	vector<pair<double, double>> x = {
+// 		{0, 0},
+// 		{1, 2},
+// 		{2, 3},
+// 		{3, 2},
+// 		{2, 1},
+// 		{2, 1},
+// 		{1, 2},
+// 		{1, 1},
+// 		{1.5, 1},
+// 		{0, 0}};
+// 	vector<pair<double, double>> y = {
+// 		{1, 2},
+// 		{2, 3},
+// 		{3, 2},
+// 		{2, 1},
+// 		{0, 0},
+// 		{2, 3},
+// 		{4, 2},
+// 		{1, 1.5},
+// 		{1, 1},
+// 		{3, 3}};
+// 	double xc[2] = {};
+// 	double yc[2] = {};
+// 	EventQueue Q = EventQueue();
+// 	for (int i = 0; i < (int)x.size(); i++)
+// 	{
+// 		xc[0] = x[i].first;
+// 		xc[1] = x[i].second;
+// 		yc[0] = y[i].first;
+// 		yc[1] = y[i].second;
+// 		Q.insert_line(Line(xc, yc));
+// 	}
+// 	return 0;
+// }

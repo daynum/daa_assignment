@@ -1,13 +1,15 @@
 /*a node will have lines passing through it, left node, right node, and it's height*/
-#include <line.cpp>
-class Node
+#include "line.cpp"
+#include <iostream>
+using namespace std;
+class Status_Node
 {
 public:
     Line line;
-    Node *left;
-    Node *right;
+    Status_Node *left;
+    Status_Node *right;
     int height;
-    Node(int a)
+    Status_Node()
     {
 
         this->line = Line();
@@ -15,14 +17,7 @@ public:
         this->left = nullptr;
         this->right = nullptr;
     }
-    Node()
-    {
-        this->line = Line();
-        this->height = 0;
-        *this->left = Node(0);
-        *this->right = Node(0);
-    }
-    Node(Line l)
+    Status_Node(Line l)
     {
         this->line = l;
         this->height = 1;
@@ -30,7 +25,7 @@ public:
         this->right = nullptr;
     }
 
-    void copy(Node x)
+    void copy(Status_Node x)
     {
         this->line = x.line;
         this->height = x.height;
@@ -40,133 +35,178 @@ public:
 
     bool is_null()
     {
-        return (this->height == 0 && this->line.isNull());
+        return (this->height == 0);
     }
 };
 
 class StatusStructure
 {
 public:
-    Node root;
+    Status_Node *root = nullptr;
     StatusStructure()
     {
-        Node root = Node();
+        this->root = new Status_Node();
     }
 
-    Node insert(Node root, vector<double> point, Line l)
+    Status_Node *insert(Status_Node *root, vector<double> point, Line l)
     {
-        if (root.is_null())
+        cout << "line: " << l.upper_end[0] << " " << l.upper_end[1];
+        cout << ", " << l.lower_end[0] << " " << l.lower_end[1] << endl;
+        if (!root || (*root).is_null())
         {
-            return Node(l);
+            Status_Node *x = new Status_Node(l);
+            return x;
         }
-        else if (root.line.compare_lower_angle(point[0], point[1], l) > 0)
+        else if ((*root).line.compare_lower_angle(point[0], point[1], l) > 0)
         {
-
-            *root.left = this->insert(*root.left, point, l);
+            if (!(*root).left || (*root).left->is_null())
+            {
+                Status_Node x = Status_Node(l);
+                (*root).left = &x;
+            }
+            else
+            {
+                Status_Node *x = new Status_Node();
+                x = this->insert((*root).left, point, l);
+                (*root).left = x;
+            }
         }
         else
         {
-
-            *root.right = this->insert(*root.right, point, l);
+            if ((!(*root).right) || (*root).right->is_null())
+            {
+                Status_Node *x = new Status_Node();
+                (*root).right = x;
+            }
+            else
+            {
+                Status_Node *x = new Status_Node();
+                x = this->insert((*root).right, point, l);
+                (*root).right = x;
+            }
         }
 
-        root.height = 1 + max(this->fetch_height(*root.left), this->fetch_height(*root.right));
+        if ((!(*root).left) || (*root).left->is_null())
+        {
+            if ((!(*root).right) || (*root).right->is_null())
+            {
+                (*root).height = 1;
+            }
+            else
+            {
+                (*root).height = 1 + this->fetch_height((*root).right);
+            }
+        }
+        else if ((!(*root).right) || (*root).right->is_null())
+        {
+            (*root).height = 1 + this->fetch_height((*root).left);
+        }
+        else
+        {
+            (*root).height = 1 + max(this->fetch_height((*root).right), this->fetch_height((*root).right));
+        }
         int balance = fetch_balance(root);
-        if ((balance > 1) && (root.line.compare_lower_angle(point[0], point[1], l) > 0))
+        if ((balance > 1) && ((*root).line.compare_lower_angle(point[0], point[1], l) > 0))
             return this->rotateRight(root);
-        if ((balance < -1) && (root.line.compare_lower_angle(point[0], point[1], l) < 0))
+        if ((balance < -1) && ((*root).line.compare_lower_angle(point[0], point[1], l) < 0))
             return this->rotateLeft(root);
-        if ((balance > 1) && (root.line.compare_lower_angle(point[0], point[1], l) < 0))
+        if ((balance > 1) && ((*root).line.compare_lower_angle(point[0], point[1], l) < 0))
         {
-            *root.left = this->rotateLeft(*root.left);
+            (*root).left = this->rotateLeft((*root).left);
             return this->rotateRight(root);
         }
-        if ((balance < -1) && (root.line.compare_lower_angle(point[0], point[1], l) > 0))
+        if ((balance < -1) && ((*root).line.compare_lower_angle(point[0], point[1], l) > 0))
         {
-            *root.right = this->rotateRight(*root.right);
+            (*root).right = this->rotateRight((*root).right);
             return this->rotateLeft(root);
         }
         return root;
     }
-    Node insert_lines(vector<double> point, vector<Line> &lines)
+    void insert_lines(vector<double> point, vector<Line> &lines)
     {
         for (Line l : lines)
         {
-            this->root = this->insert(this->root, point, l);
+            Status_Node *x = this->insert(this->root, point, l);
+            this->root = x;
         }
     }
     // implement print_name
-    Node rotateLeft(Node node)
+    Status_Node *rotateLeft(Status_Node *node)
     {
-        Node x = *node.right;
-        Node temp = *x.left;
-        *x.left = node;
-        *node.right = temp;
-        if (this->fetch_height(*node.left) > this->fetch_height(*node.right))
+        Status_Node *x = new Status_Node();
+        x = (*node).right;
+        Status_Node *temp = (*x).left;
+        (*x).left = node;
+        (*node).right = temp;
+        if (this->fetch_height((*node).left) > this->fetch_height((*node).right))
         {
-            node.height = this->fetch_height(*node.left) + 1;
+            (*node).height = this->fetch_height((*node).left) + 1;
         }
         else
         {
-            node.height = this->fetch_height(*node.right) + 1;
+            (*node).height = this->fetch_height((*node).right) + 1;
         }
 
-        if (this->fetch_height(*x.left) > this->fetch_height(*x.right))
+        if (this->fetch_height((*x).left) > this->fetch_height((*x).right))
         {
-            x.height = this->fetch_height(*x.left) + 1;
+            (*x).height = this->fetch_height((*x).left) + 1;
         }
         else
         {
-            x.height = this->fetch_height(*x.right) + 1;
+            (*x).height = this->fetch_height((*x).right) + 1;
         }
 
         return x;
     }
-    Node rotateRight(Node node)
+    Status_Node *rotateRight(Status_Node *node)
     {
-        Node x = *node.left;
-        Node temp = *x.right;
-        *x.right = node;
-        *node.left = temp;
-        if (this->fetch_height(*node.left) > this->fetch_height(*node.right))
+
+        Status_Node *x = new Status_Node();
+        x = (*node).left;
+        Status_Node *temp = (*x).right;
+        (*x).right = node;
+        (*node).left = temp;
+        if (this->fetch_height((*node).left) > this->fetch_height((*node).right))
         {
-            node.height = this->fetch_height(*node.left) + 1;
+            (*node).height = this->fetch_height((*node).left) + 1;
         }
         else
         {
-            node.height = this->fetch_height(*node.right) + 1;
+            (*node).height = this->fetch_height((*node).right) + 1;
         }
 
-        if (this->fetch_height(*x.left) > this->fetch_height(*x.right))
+        if (this->fetch_height((*x).left) > this->fetch_height((*x).right))
         {
-            x.height = this->fetch_height(*x.left) + 1;
+            (*x).height = this->fetch_height((*x).left) + 1;
         }
         else
         {
-            x.height = this->fetch_height(*x.right) + 1;
+            (*x).height = this->fetch_height((*x).right) + 1;
         }
 
         return x;
     }
 
-    void inorder(Node root, vector<Node> &result)
+    void inorder(Status_Node *root, vector<Status_Node> &result)
     {
-        if (root.is_null())
+        if (root == nullptr || (*root).is_null())
         {
+            cout << "nullptr ";
             return;
         }
         else
         {
 
-            this->inorder(*root.left, result);
-            result.push_back(root);
-            this->inorder(*root.right, result);
+            this->inorder((*root).left, result);
+            result.push_back(*root);
+            this->inorder((*root).right, result);
         }
     }
 
-    vector<Node> self_inorder()
+    vector<Status_Node> self_inorder()
     {
-        vector<Node> result{};
+        cout << "Inorder:\n";
+        vector<Status_Node> result{};
         this->inorder(this->root, result);
         return result;
     }
@@ -182,79 +222,104 @@ public:
             this->delete_line(point, l);
         }
     }
-    Node delete_node(Node root, vector<double> point, Line l)
+    Status_Node *delete_node(Status_Node *root, vector<double> point, Line l)
     {
-        if (root.is_null())
+        if (!root || (*root).is_null())
         {
             return root;
         }
-        else if (root.line.compare_upper_angle(point[0], point[1], l) > 0)
+        else if ((*root).line.compare_upper_angle(point[0], point[1], l) > 0)
         {
-            *root.left = this->delete_node(*root.left, point, l);
+            Status_Node *x = this->delete_node((*root).left, point, l);
+            (*root).left = x;
         }
-        else if (root.line.compare_upper_angle(point[0], point[1], l) < 0)
+        else if ((*root).line.compare_upper_angle(point[0], point[1], l) < 0)
         {
-            *root.right = this->delete_node(*root.right, point, l);
+            Status_Node *x = this->delete_node((*root).right, point, l);
+            (*root).right = x;
         }
         else
         {
-            if ((*root.left).is_null())
+            if ((!(*root).left) || ((*root).left)->is_null())
             {
-                Node temp = *root.right;
-                root = Node();
+                Status_Node *temp = new Status_Node();
+                temp = (*root).right;
+                *root = Status_Node();
                 return temp;
             }
-            else if ((*root.right).is_null())
+            else if ((!(*root).right) || (*root).right->is_null())
             {
-                Node temp = *root.left;
-                root = Node();
+                Status_Node *temp = new Status_Node();
+                temp = (*root).left;
+                *root = Status_Node();
                 return temp;
             }
-            Node temp = this->fetch_min_val_node(*root.right);
-            root.line = temp.line;
-            *root.right = this->delete_node(*root.right, point, temp.line);
+            Status_Node temp = *this->fetch_min_val_node((*root).right);
+            (*root).line = temp.line;
+            Status_Node *x = this->delete_node((*root).right, point, temp.line);
+            (*root).right = x;
         }
-        if (root.is_null())
+        if (!root || (*root).is_null())
             return root;
 
-        root.height = 1 + max(this->fetch_height(*root.left), this->fetch_height(*root.right));
+        (*root).height = 1 + max(this->fetch_height((*root).left), this->fetch_height((*root).right));
         int balance = this->fetch_balance(root);
-        if ((balance > 1) && (this->fetch_balance(*root.left) >= 0))
+        if ((balance > 1) && (this->fetch_balance((*root).left) >= 0))
             return this->rotateRight(root);
-        if ((balance < -1) && (this->fetch_balance(*root.right) <= 0))
+        if ((balance < -1) && (this->fetch_balance((*root).right) <= 0))
             return this->rotateLeft(root);
-        if ((balance > 1) && (this->fetch_balance(*root.left) < 0))
+        if ((balance > 1) && (this->fetch_balance((*root).left) < 0))
         {
-            *root.left = this->rotateLeft(*root.left);
+            Status_Node *x = this->rotateLeft((*root).left);
+            (*root).left = x;
             return this->rotateRight(root);
         }
-        if ((balance < -1) && (this->fetch_balance(*root.right) > 0))
+        if ((balance < -1) && (this->fetch_balance((*root).right) > 0))
         {
-            *root.right = this->rotateRight(*root.right);
+            Status_Node *x = this->rotateRight((*root).right);
+            (*root).right = x;
             return this->rotateLeft(root);
         }
 
         return root;
     }
 
-    Node fetch_min_val_node(Node root)
+    Status_Node *fetch_min_val_node(Status_Node *root)
     {
-        if (root.is_null() || (*root.left).is_null())
+        if (!root || (*root).is_null() || !((*root).left) || ((*root).left)->is_null())
             return root;
 
-        return this->fetch_min_val_node(*root.left);
+        return this->fetch_min_val_node((*root).left);
     }
 
-    int fetch_height(Node root)
+    int fetch_height(Status_Node *root)
     {
-        if (root.is_null())
+        if (!root || (*root).is_null())
             return 0;
         else
-            return root.height;
+            return (*root).height;
     }
-    int fetch_balance(Node root)
+    int fetch_balance(Status_Node *root)
     {
-        return (*root.left).height - (*root.right).height;
+        if ((!(*root).left) || (*root).left->is_null())
+        {
+            if ((!(*root).right) || (*root).right->is_null())
+            {
+                return 0;
+            }
+            else
+            {
+                return 0 - (*root).right->height;
+            }
+        }
+        else if ((!(*root).right) || (*root).right->is_null())
+        {
+            return (*root).left->height;
+        }
+        else
+        {
+            return (*root).left->height - (*root).right->height;
+        }
     }
 
     vector<vector<Line>> get_segments_containing_point(vector<double> point)
@@ -263,134 +328,183 @@ public:
         this->inner_get_segments(this->root, point, result);
         return result;
     }
-    void inner_get_segments(Node root, vector<double> point, vector<vector<Line>> &result)
+    void inner_get_segments(Status_Node *root, vector<double> point, vector<vector<Line>> &result)
     {
-        if (root.is_null())
+
+        if (!root || (*root).is_null())
         {
+
             return;
         }
-        else if (root.line.pointWRTLine(point[0], point[1]) > 0)
+        else if ((*root).line.pointWRTLine(point[0], point[1]) > 0)
         {
-            this->inner_get_segments(*root.right, point, result);
+            this->inner_get_segments((*root).right, point, result);
         }
-        else if (root.line.pointWRTLine(point[0], point[1]) < 0)
+        else if ((*root).line.pointWRTLine(point[0], point[1]) < 0)
         {
-            this->inner_get_segments(*root.left, point, result);
+            this->inner_get_segments((*root).left, point, result);
         }
         else
         {
-            if (!(*root.left).is_null())
+            if ((!(*root).left->is_null()) || (!(*root).left))
             {
-                this->inner_get_segments(*root.left, point, result);
+                this->inner_get_segments((*root).left, point, result);
             }
-            if (root.line.lower_end == point)
+            if ((*root).line.lower_end == point)
             {
-                result[0].push_back(root.line);
+                result[0].push_back((*root).line);
             }
             else
             {
-                result[1].push_back(root.line);
+                result[1].push_back((*root).line);
             }
-            result[2].push_back(root.line);
+            result[2].push_back((*root).line);
 
-            if (!(*root.right).is_null())
+            if ((!(*root).right->is_null()) || (!(*root).right))
             {
-                this->inner_get_segments(*root.right, point, result);
+                this->inner_get_segments((*root).right, point, result);
             }
         }
     }
-    void inner_find_left(Node root, vector<double> point, Node left)
+    void inner_find_left(Status_Node *root, vector<double> point, Status_Node left)
     {
-        if (root.is_null())
+        if (!root || (*root).is_null())
             return;
-        else if (root.line.pointWRTLine(point[0], point[1]) > 0)
+        else if ((*root).line.pointWRTLine(point[0], point[1]) > 0)
         {
-            left.copy(root);
-            this->inner_find_left(*root.right, point, left);
+            left.copy((*root));
+            this->inner_find_left((*root).right, point, left);
         }
-        else if (root.line.pointWRTLine(point[0], point[1]) <= 0)
+        else if ((*root).line.pointWRTLine(point[0], point[1]) <= 0)
         {
-            this->inner_find_left(*root.left, point, left);
+            this->inner_find_left((*root).left, point, left);
         }
     }
 
     Line get_adjacent_left_line(vector<double> point)
     {
-        Node left = Node();
+        Status_Node left = Status_Node();
         this->inner_find_left(this->root, point, left);
         return left.line;
     }
 
     Line get_adjacent_right_line(vector<double> point)
     {
-        Node right = Node();
+        Status_Node right = Status_Node();
         this->inner_find_right(this->root, point, right);
         return right.line;
     }
 
-    void inner_find_right(Node root, vector<double> point, Node right)
+    void inner_find_right(Status_Node *root, vector<double> point, Status_Node right)
     {
-        if (root.is_null())
+        if (!root || (*root).is_null())
             return;
-        else if (root.line.pointWRTLine(point[0], point[1]) >= 0)
+        else if ((*root).line.pointWRTLine(point[0], point[1]) >= 0)
         {
-            this->inner_find_right(*root.right, point, right);
+            this->inner_find_right((*root).right, point, right);
         }
-        else if (root.line.pointWRTLine(point[0], point[1]) < 0)
+        else if ((*root).line.pointWRTLine(point[0], point[1]) < 0)
         {
-            right.copy(root);
-            this->inner_find_right(*root.left, point, right);
+            right.copy((*root));
+            this->inner_find_right((*root).left, point, right);
         }
     }
-    void inner_leftmost(Node root, vector<double> point, Node leftmost)
+    void inner_leftmost(Status_Node *root, vector<double> point, Status_Node leftmost)
     {
-        if (root.is_null())
+        if (!root || (*root).is_null())
             return;
-        else if (root.line.pointWRTLine(point[0], point[1]) > 0)
+        else if ((*root).line.pointWRTLine(point[0], point[1]) > 0)
         {
-            this->inner_leftmost(*root.right, point, leftmost);
+            this->inner_leftmost((*root).right, point, leftmost);
         }
-        else if (root.line.pointWRTLine(point[0], point[1]) < 0)
+        else if ((*root).line.pointWRTLine(point[0], point[1]) < 0)
         {
-            this->inner_leftmost(*root.left, point, leftmost);
+            this->inner_leftmost((*root).left, point, leftmost);
         }
         else
         {
-            this->inner_leftmost(*root.right, point, leftmost);
-            leftmost.copy(root);
-            this->inner_leftmost(*root.left, point, leftmost);
+            this->inner_leftmost((*root).right, point, leftmost);
+            leftmost.copy((*root));
+            this->inner_leftmost((*root).left, point, leftmost);
         }
     }
-    void inner_rightmost(Node root, vector<double> point, Node rightmost)
+    void inner_rightmost(Status_Node *root, vector<double> point, Status_Node rightmost)
     {
-        if (root.is_null())
+        if (!root || (*root).is_null())
             return;
-        else if (root.line.pointWRTLine(point[0], point[1]) > 0)
+        else if ((*root).line.pointWRTLine(point[0], point[1]) > 0)
         {
-            this->inner_rightmost(*root.right, point, rightmost);
+            this->inner_rightmost((*root).right, point, rightmost);
         }
-        else if (root.line.pointWRTLine(point[0], point[1]) < 0)
+        else if ((*root).line.pointWRTLine(point[0], point[1]) < 0)
         {
-            this->inner_rightmost(*root.left, point, rightmost);
+            this->inner_rightmost((*root).left, point, rightmost);
         }
         else
         {
-            this->inner_rightmost(*root.left, point, rightmost);
-            rightmost.copy(root);
-            this->inner_rightmost(*root.right, point, rightmost);
+            this->inner_rightmost((*root).left, point, rightmost);
+            rightmost.copy((*root));
+            this->inner_rightmost((*root).right, point, rightmost);
         }
     }
     Line get_leftmost(vector<double> point)
     {
-        Node leftmost = Node();
+        Status_Node leftmost = Status_Node();
         this->inner_leftmost(this->root, point, leftmost);
         return leftmost.line;
     }
 
     Line get_rightmost(vector<double> point)
     {
-        Node rightmost = Node();
+        Status_Node rightmost = Status_Node();
         this->inner_rightmost(this->root, point, rightmost);
         return rightmost.line;
     }
 };
+
+// int main()
+// {
+
+//     vector<Line> lines = {};
+//     vector<pair<double, double>> x = {
+//         {0, 0},
+//         {1, 2},
+//         {2, 3},
+//         {3, 2},
+//         {2, 1},
+//         {2, 1},
+//         {1, 2},
+//         {1, 1},
+//         {1.5, 1},
+//         {0, 0}};
+//     vector<pair<double, double>> y = {
+//         {1, 2},
+//         {2, 3},
+//         {3, 2},
+//         {2, 1},
+//         {0, 0},
+//         {2, 3},
+//         {4, 2},
+//         {1, 1.5},
+//         {1, 1},
+//         {3, 3}};
+//     double xc[2] = {};
+//     double yc[2] = {};
+
+//     for (int i = 0; i < (int)x.size(); i++)
+//     {
+//         xc[0] = x[i].first;
+//         xc[1] = x[i].second;
+//         yc[0] = y[i].first;
+//         yc[1] = y[i].second;
+
+//         lines.push_back(Line(xc, yc));
+//     }
+
+//     StatusStructure T = StatusStructure();
+
+//     vector<double> point = {2, 3};
+//     T.insert_lines(point, lines);
+//     cout << "All set";
+//     return 0;
+// }
