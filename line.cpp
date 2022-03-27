@@ -11,8 +11,8 @@ public:
     Line()
     {
         name = "empty_null_line";
-        this->upper_end = vector<double>{};
-        this->lower_end = vector<double>{};
+        this->upper_end = {};
+        this->lower_end = {};
     }
     Line(double upper[2], double lower[2])
     {

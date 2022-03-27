@@ -16,7 +16,6 @@ public:
 		this->left = nullptr;
 		this->right = nullptr;
 		this->point = vector<double>(2);
-		cout << "dam";
 	}
 
 	Event_Node(vector<double> point, Line l)
@@ -44,7 +43,6 @@ public:
 			this->lines = vector<Line>{l};
 		}
 	}
-
 	bool is_null()
 	{
 		return (this->height == 0);
@@ -64,26 +62,23 @@ public:
 	{
 		vector<double> upper = {l.upper_end[0], l.upper_end[1]};
 		vector<double> lower = {l.lower_end[0], l.lower_end[1]};
-		cout << "\ninserting at: " << upper[0] << " " << upper[1] << ", " << lower[0] << " " << lower[1] << "\n";
 		Event_Node *t1 = this->inner_insert(this->root, upper, l);
 		this->root = t1;
-		Event_Node *t2 = this->inner_insert(this->root, lower, Line());
+		Line *l2 = new Line();
+		Event_Node *t2 = this->inner_insert(this->root, lower, *l2);
+		delete l2;
 		this->root = t2;
 	}
 
 	Event_Node *inner_insert(Event_Node *root, vector<double> point, Line l)
 	{
-		cout << "\n2. inserting at: " << point[0] << " " << point[1] << "and root is " << (*root).is_null() << "\n";
-
 		if ((*root).is_null())
 		{
 			Event_Node *x = new Event_Node(point, l);
-			cout << "inserted at null root\n";
 			return x;
 		}
 		else if (compare_points(point, (*root).point) < 0)
 		{
-
 			Event_Node *x = this->inner_insert((*root).left, point, l);
 			(*root).left = x;
 		}
@@ -101,11 +96,11 @@ public:
 			return root;
 		}
 		(*root).height = 1 + max(this->fetch_height((*root).left), this->fetch_height((*root).right));
-		root = balance(point, root);
+		root = balance_insert(point, root);
 		return root;
 	}
 
-	Event_Node *balance(vector<double> point, Event_Node *root)
+	Event_Node *balance_insert(vector<double> point, Event_Node *root)
 	{
 		int bal = fetch_balance(root);
 
@@ -125,9 +120,9 @@ public:
 		}
 		return root;
 	}
-	static int compare_points(vector<double> p1, vector<double> p2)
+	static double compare_points(vector<double> p1, vector<double> p2)
 	{
-		if (!(abs(p1[1] - p2[1]) < 1e-3))
+		if (p1[1] != p2[1])
 			return p1[1] - p2[1];
 
 		return p2[0] - p1[0];
@@ -135,7 +130,8 @@ public:
 
 	void insert_point(vector<double> point)
 	{
-		this->root = this->inner_insert(this->root, point, Line());
+		Line *l = new Line();
+		this->root = this->inner_insert(this->root, point, *l);
 	}
 
 	Event_Node *rotateLeft(Event_Node *node)
@@ -166,7 +162,6 @@ public:
 	}
 	Event_Node *rotateRight(Event_Node *node)
 	{
-
 		Event_Node *x = (*node).left;
 		Event_Node *temp = (*x).right;
 		(*x).right = node;
@@ -202,7 +197,7 @@ public:
 		{
 			this->inorder((*root).left, result);
 			result.push_back(*root);
-			cout << "\n[point: " << (*root).point[0] << " " << (*root).point[0] << "], \n";
+			cout << "\n[point: " << (*root).point[0] << " " << (*root).point[1] << "], \n";
 
 			for (Line l : (*root).lines)
 			{
@@ -247,18 +242,19 @@ public:
 			{
 				Event_Node *temp = new Event_Node();
 				temp = (*root).right;
-				*root = Event_Node();
+				root = new Event_Node();
+				delete root;
 				return temp;
 			}
 			else if ((!(*root).right) || (*root).right->is_null())
 			{
 				Event_Node *temp = new Event_Node();
 				temp = (*root).left;
-				*root = Event_Node();
+				root = new Event_Node();
+				delete root;
 				return temp;
 			}
-			Event_Node *temp2 = new Event_Node();
-			temp2 = this->fetch_min_val_node((*root).right);
+			Event_Node *temp2 = this->fetch_min_val_node((*root).right);
 			(*root).point = (*temp2).point;
 			(*root).lines = (*temp2).lines;
 			(*root).right = this->delete_node((*root).right, (*temp2).point);
@@ -268,29 +264,49 @@ public:
 			return root;
 
 		(*root).height = 1 + max(this->fetch_height((*root).left), this->fetch_height((*root).right));
-		root = balance(point, root);
+		root = balance_delete(root);
+		return root;
 	}
+	Event_Node *balance_delete(Event_Node *root)
+	{
+		int bal = fetch_balance(root);
 
-	Event_Node *fetch_max()
+		if ((bal > 1) && (fetch_balance((*root).left) >= 0))
+			return this->rotateRight(root);
+		if ((bal < -1) && (fetch_balance((*root).right) <= 0))
+			return this->rotateLeft(root);
+		if ((bal > 1) && (fetch_balance((*root).left) < 0))
+		{
+			(*root).left = this->rotateLeft((*root).left);
+			return this->rotateRight(root);
+		}
+		if ((bal < -1) && (fetch_balance((*root).right) > 0))
+		{
+			(*root).right = this->rotateRight((*root).right);
+			return this->rotateLeft(root);
+		}
+		return root;
+	}
+	Event_Node fetch_max()
 	{
 		Event_Node *curr = this->root;
 		while ((!(*curr).right->is_null()))
 		{
 			curr = (*curr).right;
 		}
-		return curr;
+		return *curr;
 	}
 
-	Event_Node *pop_next_event()
+	Event_Node pop_next_event()
 	{
-		Event_Node *curr = this->fetch_max();
-		this->delete_point((*curr).point);
+		Event_Node curr = this->fetch_max();
+		this->delete_point(curr.point);
 		return curr;
 	}
 
 	Event_Node *fetch_min_val_node(Event_Node *root)
 	{
-		if (!root || (*root).is_null())
+		if (!root || (*root).is_null() || !((*root).left) || ((*root).left)->is_null())
 			return root;
 
 		return this->fetch_min_val_node((*root).left);
@@ -367,6 +383,8 @@ public:
 // 		yc[0] = y[i].first;
 // 		yc[1] = y[i].second;
 // 		Q.insert_line(Line(xc, yc));
+// 		// Q.root->lines[i].name = (char)(i + (int)'0');
 // 	}
+// 	Q.self_inorder();
 // 	return 0;
 // }
