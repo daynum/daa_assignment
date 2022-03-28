@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include "event_queue.cpp"
-
+#include <fstream>
 using namespace std;
 class FindIntersections
 {
@@ -28,7 +28,6 @@ public:
             Event_Node next_event = this->Q.pop_next_event();
             this->handle_eventpoint(next_event);
         }
-        cout << "returning from get intersections\n";
     }
 
     void handle_eventpoint(Event_Node ep)
@@ -37,27 +36,27 @@ public:
         vector<Line> Up{};
         for (Line l : ep.lines)
         {
-            if (!l.isNull())
-                Up.push_back(l);
+            // if (!l.isNull())
+            Up.push_back(l);
         }
         vector<vector<Line>> result = this->T.get_segments_containing_point(ep.point);
         vector<Line> Lp{};
         for (Line l : result[0])
         {
-            if (!l.isNull())
-                Lp.push_back(l);
+            // if (!l.isNull())
+            Lp.push_back(l);
         }
         vector<Line> Cp{};
         for (Line l : result[1])
         {
-            if (!l.isNull())
-                Cp.push_back(l);
+            // if (!l.isNull())
+            Cp.push_back(l);
         }
         vector<Line> LC{};
         for (Line l : result[2])
         {
-            if (!l.isNull())
-                LC.push_back(l);
+            // if (!l.isNull())
+            LC.push_back(l);
         }
 
         vector<Line> UC = Up;
@@ -67,15 +66,8 @@ public:
 
         if ((int)LUC.size() > 1)
         {
-            cout << "\nInserting point: " << ep.point[0] << ", " << ep.point[1] << "\n";
-            cout << "\n";
-            for (Line l : LUC)
-            {
-                cout << "[line " << l.name << "], ";
-            }
             this->intersections.push_back(ep.point);
         }
-        cout << "sizes: " << LC.size() << " " << LUC.size() << " " << UC.size();
         for (Line l : LC)
         {
             this->T.delete_line(ep.point, l);
@@ -105,7 +97,6 @@ public:
         {
             return;
         }
-
         vector<double> x = left.intersection(right);
 
         if (x.empty())
@@ -153,35 +144,31 @@ int main()
         {1.5, 1},
         {1, 1},
         {3, 3}};
-    // vector<pair<double, double>> x = {
 
-    //     {2, 1},
-    //     {1, 2}};
-    // vector<pair<double, double>> y = {
-
-    //     {2, 3},
-    //     {4, 2}};
     double xc[2] = {};
     double yc[2] = {};
-
+    ofstream line_cord("plot_lines.txt");
     for (int i = 0; i < (int)x.size(); i++)
     {
         xc[0] = x[i].first;
         xc[1] = x[i].second;
         yc[0] = y[i].first;
         yc[1] = y[i].second;
+        line_cord << xc[0] << " " << xc[1] << " " << yc[0] << " " << yc[1] << "\n";
         Line *temp = new Line(xc, yc);
         lines.push_back(*temp);
         delete temp;
         lines[i].name = (char)(i + (int)'0');
     }
+    line_cord.close();
     cout << endl;
     F.get_intersections(lines);
-    cout << "\nhere2";
-    cout << "f: " << F.intersections.empty() << endl;
+    cout << "Total intersection points found: " << F.intersections.size() << "\n";
+    ofstream cross_cord("plot_cross.txt");
     for (vector<double> point : F.intersections)
     {
-        cout << "(" << point[0] << ", " << point[1] << ")\n";
+        cout << "(" << point[0] << ", " << point[1] << ") ";
+        cross_cord << point[0] << " " << point[1] << "\n";
     }
 
     return 0;

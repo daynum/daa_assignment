@@ -99,7 +99,7 @@ public:
     {
         double angle = atan2((this->lower_end[1] - this->upper_end[1]), (this->lower_end[0] - this->upper_end[0]));
         angle = (angle * 180) / 3.14159265359;
-        if (angle < 0)
+        if (angle <= 0)
             angle += 360;
         return angle;
     }
@@ -140,7 +140,9 @@ public:
         }
         else
         {
-            return (this->fetch_lower_angle() - l.fetch_lower_angle());
+            double a1 = this->fetch_lower_angle();
+            double a2 = l.fetch_lower_angle();
+            return a1 - a2;
         }
     }
 
