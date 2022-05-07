@@ -1,13 +1,4 @@
-Assignment-1.pdf
-Computational Geometry29-39.pdf
-daa_assignment_1.zip
+*.zip
+*.pdf
 .vscode/
-line_intersecting/
-a.exe
-main.exe
-status_structure.exe
-event_queue.exe
-most_precious_dont_fuck_with_it/
-plot_cross.txt
-plot_lines.txt
-doc/
+*.exe

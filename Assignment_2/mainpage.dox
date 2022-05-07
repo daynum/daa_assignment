@@ -1,0 +1,30 @@
+/*! \mainpage RNA Sequence pairing algorithm
+ *
+ * This algorithm calculates the number of pairs in a secondary structure of RNA sequence folding
+ *
+ * It uses RNA class to handle the sequence and process it with a dynamic programming algorithm.
+ * 
+ * \section RNA
+ * 
+ * \subpage rna
+ * 
+ * \section OtherResources
+ * \subpage readme
+ *
+ * \subpage report
+ */
+
+RNA
+/*! \page rna
+ * This page is about RNA class
+ */
+ 
+Readme
+/*! \page readme
+ * <a style="font-weight:bold" href="md__r_e_a_d_m_e.html" font-weight="bold">README</a>
+ */
+
+Report
+/*! \page report
+ * <a style="font-weight:bold" href="md__report.html" font-weight="bold">HTML REPORT</a>
+ */
