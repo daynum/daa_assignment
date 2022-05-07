@@ -11,7 +11,7 @@
 /// \brief using standard namespace.
 using namespace std;
 
-/// \class Line Line.h
+/// \class Line Line.cpp
 /// \brief Line class for handling line segments.
 /// This class defines a line segment, with two end points.\n and provides a few functions to fetch geometric information about a line or pair of lines.
 class Line
@@ -20,9 +20,9 @@ public:
     /// \brief string name stores the name of line segment.
     string name = "nullname";
     /// \brief vector<double> upper_end stores the upper end point of line segment.
-    vector<double> upper_end{0, 0};
+    vector<double> upper_end{};
     /// \brief vector<double> lower_end stores the lower end point of line segment.
-    vector<double> lower_end{0, 0};
+    vector<double> lower_end{};
     /// \brief Empty line constructor for Line class.
     Line()
     {
@@ -33,6 +33,8 @@ public:
     /// \brief Constructor for Line class with 2 endpoints given.
     Line(double upper[2], double lower[2])
     {
+        this->upper_end = {0, 0};
+        this->lower_end = {0, 0};
         if (upper[1] > lower[1])
         {
             this->upper_end[0] = upper[0];
@@ -72,7 +74,8 @@ public:
     }
     /// \brief finds the intersection point of two lines.
     /// \param [in] Line l second line to find intersection with.
-    /// \returns vector<double> intersection point.
+    /// \param [out] ans the intersection point.
+    /// \returns ans intersection point.
     vector<double> intersection(Line l)
     {
         double x1 = this->upper_end[0];
@@ -111,9 +114,9 @@ public:
         double y2 = this->lower_end[1];
 
         double res = (x2 - x1) * (y - y1) - (y2 - y1) * (x - x1);
-        if (res < 0)
+        if (res < -0.0001)
             return -1;
-        else if (res > 0)
+        else if (res > 0.0001)
             return 1;
         else
             return 0;
@@ -176,9 +179,7 @@ public:
         }
         else
         {
-            double a1 = this->fetch_lower_angle();
-            double a2 = l.fetch_lower_angle();
-            return a1 - a2;
+            return this->fetch_lower_angle() - l.fetch_lower_angle();
         }
     }
     /// \brief get upper angle between a point and a line.

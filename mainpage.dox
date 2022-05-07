@@ -1,0 +1,36 @@
+/*! \mainpage Sweep line intersection algorithm
+ *
+ * This algorithm finds intersctions of line segments, using sweep line algorithm.
+ *
+ * It uses two data structures StatusStructure and EventQueue implemented as self balancing binary search trees.
+ *
+ * And then uses them to sweep the plane with a line while keeping track of all the oredered segments.
+ * \section EventQueue
+ * \subpage event_queue
+ * \section StatusStructure
+ * \subpage status_structure
+ * \section OtherResources
+ * \subpage readme
+ *
+ * \subpage report
+ */
+
+Status Structure
+/*! \page status_structure
+ * This page is about StatusStructure class
+ */
+
+Event Queue
+/*! \page event_queue
+ * This page is about EventQueue class
+ */
+
+Readme
+/*! \page readme
+ * <a style="font-weight:bold" href="md__r_e_a_d_m_e.html" font-weight="bold">README</a>
+ */
+
+Report
+/*! \page report
+ * <a style="font-weight:bold" href="md__report.html" font-weight="bold">HTML REPORT</a>
+ */
