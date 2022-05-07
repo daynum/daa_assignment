@@ -1,5 +1,4 @@
 #include "status_structure.cpp"
-// #include "line.cpp"
 class Event_Node
 {
 public:

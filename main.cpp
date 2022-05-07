@@ -1,5 +1,3 @@
-#include <iostream>
-#include <vector>
 #include "event_queue.cpp"
 #include <fstream>
 using namespace std;

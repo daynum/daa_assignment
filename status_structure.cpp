@@ -1,6 +1,4 @@
-/*a node will have lines passing through it, left node, right node, and it's height*/
 #include "line.cpp"
-#include <iostream>
 using namespace std;
 class Status_Node
 {
