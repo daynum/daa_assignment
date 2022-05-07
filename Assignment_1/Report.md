@@ -7,8 +7,6 @@
 | Name                  | ID               |
 | --------------------- | ---------------- |
 | **Dinank Vashistha**  | **2018B5A71055H**|
-| **Rohit Kushwah**     | **2018B5A71062H**|
-| **Soumit Mishra**     | **2018B5A70429H**|
 
 ---
 
